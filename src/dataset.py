@@ -23,6 +23,17 @@ class VG100KDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx: int) -> dict[str, tp.Any]:
+        """
+        Args:
+            idx: Index of the sample.
+        Returns:
+            Sample as a dictionary with the following keys:
+                - image_path: Path to the image.
+                - image: Image as a PIL.Image.
+                - answer: Answer to the question.
+                - question: Question.
+                - is_simple: Whether the question is simple.
+        """
         item = self.data[idx]
         image_path = self.image_dir / Path(item['image']).name
         image = Image.open(image_path).convert('RGB')
@@ -45,7 +56,15 @@ class VG100KDataset(Dataset):
         return sample
 
 
-def format_template(question: str) -> str:
+def format_template(question: str) -> list[dict[str, tp.Any]]:
+    """
+    Formats the question with chat template suitable for the Instruct model.
+
+    Args:
+        question: Question to format.
+    Returns:
+        Formatted question.
+    """
     return [
         {
             "role": "user",

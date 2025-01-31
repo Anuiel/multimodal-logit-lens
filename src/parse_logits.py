@@ -8,11 +8,22 @@ from logit_features import LogitsData, load_logits_json
 
 
 class MetricsCalculation:
+    """
+    Class for calculating metrics from the logits data.
+    """
     def __init__(self, logits_data: LogitsData, chinise_mapping: dict[int, list[str]]) -> None:
         self.chinise_mapping = chinise_mapping
         self.logits_data = logits_data
 
     def check_per_layer_accuracy(self) -> pd.DataFrame:
+        """
+        Calculate per layer accuracy.
+
+        Returns:
+            Per layer accuracy as a DataFrame with columns:
+                - layer: Layer number.
+                - accuracy: Accuracy.
+        """
         per_layer_accuracy: dict[str, float] = {f"layer_{i}": 0 for i in range(29)}
         for entry in self.logits_data.entries:
             for layer, features in entry.hidden_features.items():
@@ -22,6 +33,16 @@ class MetricsCalculation:
         return per_layer_accuracy
 
     def check_for_chinise_character(self) -> pd.DataFrame:
+        """
+        Calculate per layer topk chinise character.
+        If k-th character is chinise, then all characters after it are also count as chinise.
+
+        Returns:
+            Per layer topk chinise character as a DataFrame with columns:
+                - layer: Layer number.
+                - topk: Topk number.
+                - has_chinise: Proportion of topk tokens with chinise character.
+        """
         per_chinise_character: dict[str, dict[int, int]] = {f"layer_{i}": {k: 0 for k in range(5)} for i in range(29)}
         for entry in self.logits_data.entries:
             for layer, features in entry.hidden_features.items():
@@ -35,6 +56,15 @@ class MetricsCalculation:
         return per_chinise_character
 
     def check_per_answer_per_layer_accuracy(self) -> pd.DataFrame:
+        """
+        Calculate per answer per layer accuracy.
+
+        Returns:
+            Per answer per layer accuracy as a DataFrame with columns:
+                - layer: Layer number.
+                - answer: Answer number.
+                - accuracy: Accuracy.
+        """
         per_answer_per_layer_correct: dict[tuple[str, int], int] = {(f'layer_{layer}', answer): 0 for layer in range(29) for answer in range(6)}
         answer_count: dict[int, int] = {}
         for entry in self.logits_data.entries:

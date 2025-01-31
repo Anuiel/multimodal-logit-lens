@@ -12,11 +12,22 @@ from model import VLM
 from utils import set_seed
 
 
-def get_stratified_subset(
+def get_subset(
     dataset: VG100KDataset,
     number_upper_bound: int = 5,
     limit: int = 5000
 ):
+    """
+    Get a subset of the dataset with only simple questions and answers less than or equal to the number_upper_bound.
+    Limits the number of items in the subset.
+
+    Args:
+        dataset: Dataset to sample from.
+        number_upper_bound: Upper bound for the answer.
+        limit: Number of items in the subset.
+    Returns:
+        Subset of the dataset.
+    """
     subset_indices = []
     for i, item in enumerate(dataset):
         if item['answer'] <= number_upper_bound and item['is_simple']:
@@ -29,12 +40,31 @@ def get_stratified_subset(
 
 
 def get_model(model_name: str, device: str):
+    """
+    Load the model and move it to the device.
+
+    Args:
+        model_name: Model name.
+        device: Device to move the model to.
+    Returns:
+        Model.
+    """
     model = VLM(model_name)
     model.to(device)
     return model
 
 
+
 def inference_dataset(model: VLM, dataset: VG100KDataset) -> list[dict[str, tp.Any]]:
+    """
+    Base function to perform inference on the dataset.
+
+    Args:
+        model: Model to perform inference with.
+        dataset: Dataset to perform inference on.
+    Returns:
+        List of dictionaries with the results.
+    """
     result = []
     for sample in tqdm(DataLoader(dataset, batch_size=1, num_workers=4, shuffle=False, pin_memory=True, collate_fn=lambda x: x[0])):
         if sample['answer'] > 5:
@@ -54,7 +84,7 @@ def main():
         json_path='test.json',
         image_dir='VG_100K_2'
     )
-    subset = get_stratified_subset(dataset)
+    subset = get_subset(dataset)
 
     device = 'cuda:0'
     model_name = "Qwen/Qwen2-VL-2B-Instruct"

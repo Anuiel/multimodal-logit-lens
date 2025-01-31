@@ -5,6 +5,12 @@ from transformers import AutoProcessor, AutoModelForImageTextToText
 
 
 class VLM(torch.nn.Module):
+    """
+    Wrapper over Hugging Face's Visual Language Model.
+
+    Args:
+        model_name: Model name.
+    """
     def __init__(self, model_name: str) -> None:
         super().__init__()
 
@@ -13,6 +19,18 @@ class VLM(torch.nn.Module):
         self.model.eval()
 
     def inference(self, image: Image.Image, conversation: str, max_new_tokens: int = 32) -> dict[str, tp.Any]:
+        """
+        Run the inference on a single item.
+
+        Args:
+            image: Image.
+            conversation: Conversation.
+            max_new_tokens: Maximum number of tokens to generate.
+        Returns:
+            Dictionary with the following keys:
+                - output_text: Generated text.
+                - hidden_states_features: Hidden states features.
+        """
         text_prompt = self.processor.apply_chat_template(conversation, add_generation_prompt=True)
         inputs = self.processor(text=[text_prompt], images=[image], padding=True, return_tensors="pt")
         inputs = inputs.to(self.device)
@@ -29,6 +47,16 @@ class VLM(torch.nn.Module):
         }
 
     def _process_hidden_features(self, hidden_states: list[torch.Tensor]) -> list[torch.Tensor]:
+        """
+        Maps hidden states to the topk tokens and their probabilities.
+
+        Args:
+            hidden_states: List of hidden states.
+        Returns:
+            List of dictionaries with the following keys:
+                - topk_tokens: List of top-k tokens.
+                - topk_probs: List of probabilities for the top-k tokens.
+        """
         hidden_states_features: dict[str, tp.Any] = {}
         for i, hidden_state in enumerate(hidden_states):
             with torch.no_grad():
@@ -47,4 +75,7 @@ class VLM(torch.nn.Module):
 
     @property
     def device(self) -> torch.device:
+        """
+        Returns the device of the model.
+        """
         return next(self.parameters()).device

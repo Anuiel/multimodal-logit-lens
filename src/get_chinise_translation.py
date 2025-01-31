@@ -15,7 +15,17 @@ def get_stratified_subset(
     dataset: VG100KDataset,
     numbers: int = 10,
     number_of_items_per_class: int = 30,
-):
+) -> VG100KDataset:
+    """
+    Stratify dataset by the answer and return a subset with a fixed number of items per class.
+
+    Args:
+        dataset: Dataset to stratify.
+        numbers: Number of classes to sample.
+        number_of_items_per_class: Number of items to sample per class.
+    Returns:
+        Subset with a fixed number of items per class.
+    """
     subset_indices = []
     for number in range(numbers):
         items_collected = 0
@@ -29,12 +39,30 @@ def get_stratified_subset(
 
 
 def get_model(model_name: str, device: str):
+    """
+    Load the model and move it to the device.
+
+    Args:
+        model_name: Model name.
+        device: Device to move the model to.
+    Returns:
+        Model.
+    """
     model = VLM(model_name)
     model.to(device)
     return model
 
 
 def inference_dataset(model: VLM, dataset: VG100KDataset) -> list[dict[str, tp.Any]]:
+    """
+    Base function to perform inference on the dataset.
+
+    Args:
+        model: Model to perform inference with.
+        dataset: Dataset to perform inference on.
+    Returns:
+        List of dictionaries with the results.
+    """
     result = []
     for sample in tqdm(dataset):
         image = sample['image']
